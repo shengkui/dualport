@@ -3,6 +3,11 @@
 #The list of serial ports need to be tested.
 SERIAL_LIST=(ttyS4 ttyS5 ttyS6 ttyS7)
 
+#if arguments specified, get the serial port list from arguments
+if [ $# -gt 0 ];then
+    SERIAL_LIST=( $@ )
+fi
+
 BAUDRATE=115200
 LOOP_COUNT=100
 
