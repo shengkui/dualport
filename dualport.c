@@ -21,88 +21,15 @@
 #include <termios.h>
 #include <pthread.h>
 #include <signal.h>
+#include "dualport.h"
 
-/* Version of the program */
-#define PROGRAM_VERSION         "0.4"
+/* Version of this program */
+#define PROGRAM_VERSION         "0.6"
 
-/* The name of the program */
-char *pname = "dualport";
+/* The name of this program */
+static char *pname = "dualport";
 
-
-/******************************************************************************
- * Macro definition
- ******************************************************************************/
-#ifdef DEBUG
-
-#define DBG_PRINT(format, ...) \
-    do { \
-        printf("[%s@%s, %d]: " format, \
-            __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__ ); \
-    } while (0)
-
-
-void buffer_dump_hex(void *buf, int len);
-#define DBG_DUMP                buffer_dump_hex
-
-#else
-
-#define DBG_PRINT(format, ...)
-#define DBG_DUMP(buf, len)
-
-#endif /* DEBUG */
-
-
-/* Macro to print message to stdout */
-#define CLI_OUT(format, ...) \
-    do { \
-        printf(format, ##__VA_ARGS__ ); \
-    } while (0)
-
-
-/* Compute the dimension of an array */
-#define DIM(a)                  (sizeof(a) / sizeof((a)[0]))
-
-
-/* Max retry count on read operation */
-#define MAX_RETRY_COUNT         10
-
-/* Size of in/out buffer */
-#define BUF_SIZE                256
-
-
-/* Error codes */
-#define ERR_OK                  0
-#define ERR_INVALID_PARAM       (ERR_OK + 160)
-#define ERR_OPEN_ERROR          (ERR_OK + 161)
-#define ERR_SETUP_ERROR         (ERR_OK + 162)
-#define ERR_READ_ERROR          (ERR_OK + 163)
-#define ERR_WRITE_ERROR         (ERR_OK + 164)
-#define ERR_VERIFY_ERROR        (ERR_OK + 165)
-#define ERR_TEST_FAIL           (ERR_OK + 166)
-#if ERR_OK != 0
-#error "ERR_OK has to be defined as 0!"
-#endif
-
-
-/******************************************************************************
- * Structure and global variables definition
- ******************************************************************************/
-
-/* Strucutre for thread argument */
-typedef struct _thread_arg_t {
-    int fd;                     /* The fd of serial port */
-    int loop;                   /* loop times */
-    unsigned char *data_buf;    /* The buffer to keep the chars to send or compare */
-    unsigned long *byte_count;  /* Bytes received/sent */
-} thread_arg_t;
-
-
-/* Strucutre for baudrate and flag */
-typedef struct _baud_item_t {
-    int speed;                  /* The baudrate */
-    int baud_flag;              /* The flag used to set the baudrate */
-} baud_item_t;
-
+/* Array of baudrate and flag */
 static baud_item_t baud_array[] = {
     {50,     B50},      {75,     B75},      {110,    B110},
     {134,    B134},     {150,    B150},     {200,    B200},
@@ -116,44 +43,17 @@ static baud_item_t baud_array[] = {
 static int max_baud_item = DIM(baud_array);
 
 static struct termios orig_term_attr;
+
+/* Databits mask */
 static unsigned char data_bitmask = 0xFF;
 
+/* Friendly-name of parity */
 static const char parity_name[] = {
     'N', 'O', 'E', 'M', 'S'
 };
 
-/* Strucutre for parameter */
-typedef struct _port_param_t {
-    char *device1;
-    char *device2;
-    int baudrate;
-    int databits;
-    int stopbits;
-    int parity;
-    int hwflow;
-    int loop_count;
-} port_param_t;
-
 /* The flag to inform the program exit from the loop */
 static int exit_flag = 0;
-
-
-/******************************************************************************
- * Function declaration
- ******************************************************************************/
-void print_usage(void);
-int parse_argument(int argc, char *argv[], port_param_t *param);
-int speed_to_flag(int speed);
-int setup_port(int fd, port_param_t *param);
-int reset_port(int fd);
-int read_data(int fd, void *buf, int len);
-int write_data(int fd, void *buf, int len);
-int verify_data(void *ibuf, void *obuf, int len);
-void *routine_read(void *thr_arg);
-void *routine_write(void *thr_arg);
-void my_sig_handler(int signo);
-int install_sig_handler(void);
-int sleep_ms(unsigned int ms);
 
 
 /******************************************************************************
@@ -183,10 +83,10 @@ void print_usage(void)
         "      -b baudrate   : Baudrate, 9600, 19200, ... (default: 115200)\n"
         "      -d databits   : Databits, 5, 6, 7, 8 (default: 8)\n"
         "      -c parity     : Parity, 0(None), 1(Odd), 2(Even), 3(Mark),\n"
-        "                        4(Space) (default: 0)\n"
+        "                      4(Space) (default: 0)\n"
         "      -s stopbits   : Stopbits, 1, 2 (default: 1)\n"
         "      -l loop_count : Loop count(>0) (default: 1)\n"
-        "      -f            : Enable hardware flow control (default: no flow control)\n"
+        "      -f            : Enable hardware flow control (default: no flow ctrl)\n"
         "      -h            : Print this help message\n"
         "\n"
         "Example:\n"
@@ -218,7 +118,6 @@ int main(int argc, char *argv[])
     if (rc != ERR_OK) {
         return rc;
     }
-    return 0;
 
     int fd1 = open(param.device1, O_RDWR);
     if (fd1 < 0) {
@@ -495,7 +394,6 @@ int setup_port(int fd, port_param_t *param)
     }
 
     /* Set new flag */
-    //memset(&term_attr, 0, sizeof(struct termios));
     memcpy(&term_attr, &orig_term_attr, sizeof(struct termios));
 
     term_attr.c_oflag &= ~(OPOST | ONLCR | OCRNL);
@@ -761,21 +659,20 @@ void buffer_dump_hex(void *buf, int len)
 
 /******************************************************************************
  * NAME:
- *      verify_data
+ *      buffer_compare
  *
  * DESCRIPTION: 
- *      Verify sent and received data
- *      Display data in HEX mode when DEBUG defined
+ *      Compare 2 buffers, and display data in HEX mode.
  *
  * PARAMETERS:
- *      ibuf - The receive buffer
- *      obuf - The send buffer
+ *      ibuf - The 1st buffer
+ *      obuf - The 2nd buffer
  *      len  - The bytes to compare
  *
  * RETURN:
  *      0 for equal, others for diff
  ******************************************************************************/
-int verify_data(void *ibuf, void *obuf, int len)
+int buffer_compare(void *ibuf, void *obuf, size_t len)
 {
     int i;
     int ret = 0;
@@ -783,9 +680,9 @@ int verify_data(void *ibuf, void *obuf, int len)
     unsigned char *p2 = obuf;
 
     for (i = 0; i < len; i++) {
-        DBG_PRINT("%02X  %02X\n", *(p1 + i), *(p2 + i));
+        CLI_OUT("%02X  %02X\n", *(p1 + i), *(p2 + i));
 
-        if (p1[i] != (p2[i] & data_bitmask)) {
+        if (p1[i] != p2[i]) {
             // diff !
             ret = i+1;
         }
@@ -850,8 +747,7 @@ void *routine_read(void *thr_arg)
         DBG_PRINT("Read done\n\n");
 
         /* Verify data */
-        //if (verify_data(ibuf, cmp_buf, BUF_SIZE) == 0) {
-        if (memcmp(ibuf, cmp_buf, BUF_SIZE) == 0) {
+        if (VERIFY_DATA(ibuf, cmp_buf, BUF_SIZE) == 0) {
             CLI_OUT(".");
             fflush(stdout);
         } else {

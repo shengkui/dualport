@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #The list of serial ports need to be tested.
-SERIAL_LIST=(ttyS4 ttyS5 ttyS6 ttyS7)
+SERIAL_LIST=(ttyS0 ttyS1 ttyS2 ttyS3)
 
 #if arguments specified, get the serial port list from arguments
 if [ $# -gt 0 ];then
@@ -42,7 +42,6 @@ while [ $n -lt $count ] ;do
     let n=n+1
 
     echo "Run test on $sport1 and $sport2 ..."
-
     $DUALPORT /dev/$sport1 /dev/$sport2 -b $BAUDRATE -l $LOOP_COUNT
     if [ $? -ne 0 ];then
         result=1

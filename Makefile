@@ -1,6 +1,6 @@
 TARGET=dualport
 
-CFLAGS=-Wall -O
+CFLAGS=-Wall -O #-DDEBUG
 LDLIBS=-pthread
 
 all: $(TARGET)
