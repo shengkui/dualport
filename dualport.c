@@ -131,13 +131,13 @@ int main(int argc, char *argv[])
     }
 
     if (setup_port(fd1, &param)) {
-        CLI_OUT("setup port 1 error\n");
+        CLI_OUT("setup <%s> error\n", param.device1);
         close(fd1);
         close(fd2);
         return ERR_SETUP_ERROR;
     }
     if (setup_port(fd2, &param)) {
-        CLI_OUT("setup port 2 error\n");
+        CLI_OUT("setup <%s> error\n", param.device2);
         close(fd1);
         close(fd2);
         return ERR_SETUP_ERROR;
