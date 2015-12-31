@@ -50,9 +50,9 @@ while [ $n -lt $count ] ;do
 done
 
 if [ $result -eq 0 ] ;then
-    echo "PASS"
+    echo "Test PASS"
 else
-    echo "FAIL"
+    echo "Test FAIL"
 fi
 
 exit $result

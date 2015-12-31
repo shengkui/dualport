@@ -99,7 +99,7 @@ int sleep_ms(unsigned int ms);
 #define DIM(a)                  (sizeof(a) / sizeof((a)[0]))
 
 /* Max retry count on read operation */
-#define MAX_RETRY_COUNT         10
+#define MAX_RETRY_COUNT         3
 
 /* Size of in/out buffer */
 #define BUF_SIZE                256

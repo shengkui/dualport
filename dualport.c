@@ -118,6 +118,10 @@ int main(int argc, char *argv[])
     if (rc != ERR_OK) {
         return rc;
     }
+    CLI_OUT("%s<==>%s (%d %d%c%d) (flow ctrl: %s) (loop %d)\n",
+        param.device1, param.device2, param.baudrate, param.databits,
+        parity_name[param.parity], param.stopbits, param.hwflow ? "HW" : "No",
+        param.loop_count);
 
     int fd1 = open(param.device1, O_RDWR);
     if (fd1 < 0) {
@@ -196,10 +200,10 @@ int main(int argc, char *argv[])
     pthread_join(thr_id_read2, (void *)&rc_read2);
 
     CLI_OUT("\n"
-        "---------------------------------------------------\n"
-        "%s: Sent bytes: %lu, received bytes: %lu\n"
-        "%s: Sent bytes: %lu, received bytes: %lu\n"
-        "---------------------------------------------------\n",
+        "------------------------------------------------------------\n"
+        "%-12s: Sent %lu bytes, received %lu bytes\n"
+        "%-12s: Sent %lu bytes, received %lu bytes\n"
+        "------------------------------------------------------------\n",
         param.device1, total_bytes_write1, total_bytes_read1,
         param.device2, total_bytes_write2, total_bytes_read2);
 
@@ -327,11 +331,6 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
         print_usage();
         return ERR_INVALID_PARAM;
     }
-
-    CLI_OUT("%s<==>%s (%d %d%c%d) (flow ctrl: %s) (loop %d)\n",
-        param->device1, param->device2, param->baudrate, param->databits,
-        parity_name[param->parity], param->stopbits, param->hwflow ? "HW" : "No",
-        param->loop_count);
 
     return ERR_OK;
 }

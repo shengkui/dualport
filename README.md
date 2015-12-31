@@ -12,8 +12,9 @@ It only supports full-duplex RS-232/RS-422 serial port, and doesn't support
 half-duplex RS-485.
 
 Before run this utility, We must use a cable to connect two serial ports (in the
-example, we use ttyS0 and ttyS1). Pass these 2 serial ports to the program. The 
-program opens two serial ports, then start reading and writing on both ports.
+example, we use ttyS0 and ttyS1). Pass these 2 serial ports to the program. The
+program sends predefined data on both ports, and receives data on both ports.
+Then verifies them with predefined data pattern.
 
 Following are the arguments/options of the program:
 <pre>
