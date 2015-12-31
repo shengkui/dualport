@@ -386,6 +386,11 @@ int setup_port(int fd, port_param_t *param)
     struct termios term_attr;
     int baud_flag;
 
+    if (tcflush(fd, TCIOFLUSH) < 0) {
+        CLI_OUT("tcflush error: %s\n", strerror(errno));
+        return -1;
+    }
+
     /* Backup current setting */
     if (tcgetattr(fd, &orig_term_attr) < 0) {
         CLI_OUT("tcgetattr error: %s\n", strerror(errno));
@@ -513,11 +518,6 @@ int setup_port(int fd, port_param_t *param)
 
     if (tcsetattr(fd, TCSANOW, &term_attr) < 0) {
         CLI_OUT("tcsetattr error: %s\n", strerror(errno));
-        return -1;
-    }
-
-    if (tcflush(fd, TCIOFLUSH) < 0) {
-        CLI_OUT("tcflush error: %s\n", strerror(errno));
         return -1;
     }
 
