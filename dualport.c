@@ -259,8 +259,7 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
         switch (opt) {
         case 'b':
             param->baudrate = atoi(optarg);
-            if ( (param->baudrate < baud_array[0].speed)
-                || (param->baudrate > baud_array[max_baud_item-1].speed) ) {
+            if (speed_to_flag(param->baudrate) < 0) {
                 CLI_OUT("Invalid argument (baudrate = %d)\n", param->baudrate);
                 return ERR_INVALID_PARAM;
             }
@@ -362,7 +361,6 @@ int speed_to_flag(int speed)
         }
     }
 
-    CLI_OUT("Unsupported baudrate(%d)!\n", speed);
     return -1;
 }
 
@@ -421,6 +419,7 @@ int setup_port(int fd, port_param_t *param)
     /* Set baudrate */
     baud_flag = speed_to_flag(param->baudrate);
     if (baud_flag == -1) {
+        CLI_OUT("Unsupported baudrate(%d)!\n", param->baudrate);
         return -1;
     }
     if (cfsetispeed(&term_attr, baud_flag) < 0) {
