@@ -423,11 +423,11 @@ int setup_port(int fd, port_param_t *param)
         return -1;
     }
     if (cfsetispeed(&term_attr, baud_flag) < 0) {
-        fprintf(stderr, "cfsetispeed error: %s\n", strerror(errno));
+        CLI_OUT("cfsetispeed error: %s\n", strerror(errno));
         return -1;
     }
     if (cfsetospeed(&term_attr, baud_flag) < 0) {
-        fprintf(stderr, "cfsetospeed error: %s\n", strerror(errno));
+        CLI_OUT("cfsetospeed error: %s\n", strerror(errno));
         return -1;
     }
 
@@ -659,7 +659,7 @@ void buffer_dump_hex(void *buf, int len)
  * NAME:
  *      buffer_compare
  *
- * DESCRIPTION: 
+ * DESCRIPTION:
  *      Compare 2 buffers, and display data in HEX mode.
  *
  * PARAMETERS:
