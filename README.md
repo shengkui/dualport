@@ -7,14 +7,14 @@ A simple dual-port test utility for serial port
 
 Description
 -----------
-This project is a very simple dual-port test utility for serial port under Linux.
-It only supports full-duplex RS-232/RS-422 serial port, and doesn't support
-half-duplex RS-485.
+This project is a very simple dual-port test utility for serial port under
+Linux.  It only supports full-duplex serial port(RS-232/RS-422), and doesn't
+support half-duplex serial port(RS-485).
 
-Before run this utility, We must use a cable to connect two serial ports (in the
-example, we use ttyS0 and ttyS1). Pass these 2 serial ports to the program. The
-program sends predefined data on both ports, and receives data on both ports.
-Then verifies them with predefined data pattern.
+Before run this utility, We must use a serial cable to connect two serial ports
+(in the example, we use ttyS0 and ttyS1). The program sends predefined data on
+both ports, and receives data on both ports. Then verifies them with predefined
+data.
 
 Following are the arguments/options of the program:
 <pre>
@@ -45,7 +45,7 @@ Build
 
 Run
 -----------
-Start program to do read/write test for ttyS0:
+Start program to do read/write test on ttyS0 and ttyS1:
 
 >    $ ./dualport /dev/ttyS0 /dev/ttyS1 -b 115200 -l 100
 
