@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <time.h>
 #include <unistd.h>
 #include <errno.h>
@@ -258,6 +259,10 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
     while ((opt = getopt(argc, argv, ":b:d:c:s:l:fh")) != -1) {
         switch (opt) {
         case 'b':
+            if (!is_all_digit(optarg)) {
+                CLI_OUT("Invalid argument (baudrate = %s)\n", optarg);
+                return ERR_INVALID_PARAM;
+            }
             param->baudrate = atoi(optarg);
             if (speed_to_flag(param->baudrate) < 0) {
                 CLI_OUT("Invalid argument (baudrate = %d)\n", param->baudrate);
@@ -266,6 +271,10 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
             break;
 
         case 'd':
+            if (!is_all_digit(optarg)) {
+                CLI_OUT("Invalid argument (databits = %s)\n", optarg);
+                return ERR_INVALID_PARAM;
+            }
             param->databits = atoi(optarg);
             if ((param->databits < 5) || (param->databits > 8)) {
                 CLI_OUT("Invalid argument (databits = %d)\n", param->databits);
@@ -274,6 +283,10 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
             break;
 
         case 'c':
+            if (!is_all_digit(optarg)) {
+                CLI_OUT("Invalid argument (parity = %s)\n", optarg);
+                return ERR_INVALID_PARAM;
+            }
             param->parity = atoi(optarg);
             if ((param->parity < 0) || (param->parity > 4)) {
                 CLI_OUT("Invalid argument (parity = %d)\n", param->parity);
@@ -282,6 +295,10 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
             break;
 
         case 's':
+            if (!is_all_digit(optarg)) {
+                CLI_OUT("Invalid argument (stopbits = %s)\n", optarg);
+                return ERR_INVALID_PARAM;
+            }
             param->stopbits = atoi(optarg);
             if ((param->stopbits < 1) || (param->stopbits > 2)) {
                 CLI_OUT("Invalid argument (stopbits = %d)\n", param->stopbits);
@@ -290,6 +307,10 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
             break;
 
         case 'l':
+            if (!is_all_digit(optarg)) {
+                CLI_OUT("Invalid argument (loop_count = %s)\n", optarg);
+                return ERR_INVALID_PARAM;
+            }
             param->loop_count = atoi(optarg);
             if (param->loop_count < 1) {
                 CLI_OUT("Invalid argument (loop_count = %d)\n",
@@ -900,4 +921,39 @@ int sleep_ms(unsigned int ms)
     }
  
     return 0;
+}
+
+
+/******************************************************************************
+ * NAME:
+ *      is_all_digit
+ *
+ * DESCRIPTION: 
+ *      Check if the string consist of only digits.
+ *
+ * PARAMETERS:
+ *      str - The string to check.
+ *
+ * RETURN:
+ *      1 - TRUE
+ *      0 - FALSE
+ ******************************************************************************/
+int is_all_digit(const char *str)
+{
+    /* Handle empty string. */
+    if (!*str) {
+        return 0;
+    }
+
+    /* Check for non-digit chars in the stirng. */
+    while (*str) {
+        if (!isdigit(*str)) {
+            /* non-digit char found! */
+            return 0;
+        }
+
+        ++str;
+    }
+
+    return 1;
 }

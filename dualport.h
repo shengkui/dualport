@@ -63,6 +63,7 @@ void *routine_write(void *thr_arg);
 void my_sig_handler(int signo);
 int install_sig_handler(void);
 int sleep_ms(unsigned int ms);
+int is_all_digit(const char *str);
 
 
 /******************************************************************************
