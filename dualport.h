@@ -105,6 +105,13 @@ int is_all_digit(const char *str);
 /* Size of in/out buffer */
 #define BUF_SIZE                256
 
+/* Default value of arguments/parameters */
+#define VAL_BAUDRATE    115200
+#define VAL_DATABITS    8
+#define VAL_STOPBITS    1
+#define VAL_PARITY      0
+#define VAL_LOOPCOUNT   1
+
 
 /* Error codes */
 #define ERR_OK                  0

@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <limits.h>
 #include <time.h>
 #include <unistd.h>
 #include <errno.h>
@@ -81,12 +82,12 @@ void print_usage(void)
         "Usage:\n"
         "  %s <port1> <port2> [OPTION] ...\n"
         "      port1/port2   : Serial port, /dev/ttyS0, /dev/ttyS1, ...\n"
-        "      -b baudrate   : Baudrate, 9600, 19200, ... (default: 115200)\n"
-        "      -d databits   : Databits, 5, 6, 7, 8 (default: 8)\n"
+        "      -b baudrate   : Baudrate, 9600, 19200, ... (default: %d)\n"
+        "      -d databits   : Databits, 5, 6, 7, 8 (default: %d)\n"
         "      -c parity     : Parity, 0(None), 1(Odd), 2(Even), 3(Mark),\n"
-        "                      4(Space) (default: 0)\n"
-        "      -s stopbits   : Stopbits, 1, 2 (default: 1)\n"
-        "      -l loop_count : Loop count(>0) (default: 1)\n"
+        "                      4(Space) (default: %d)\n"
+        "      -s stopbits   : Stopbits, 1, 2 (default: %d)\n"
+        "      -l loop_count : Loop count(1~%d) (default: %d)\n"
         "      -f            : Enable hardware flow control (default: no flow ctrl)\n"
         "      -h            : Print this help message\n"
         "\n"
@@ -94,7 +95,8 @@ void print_usage(void)
         "  %s /dev/ttyS0 /dev/ttyS1 -b 115200 -d 8 -c 0 -s 1 -l 100\n"
         "  %s /dev/ttyS0 /dev/ttyS1 -l 200\n"
         "\n",
-        PROGRAM_VERSION, pname, pname, pname);
+        PROGRAM_VERSION, pname, VAL_BAUDRATE, VAL_DATABITS, VAL_PARITY,
+        VAL_STOPBITS, INT_MAX, VAL_LOOPCOUNT, pname, pname);
 }
 
 

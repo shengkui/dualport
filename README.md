@@ -25,8 +25,8 @@ Following are the arguments/options of the program:
         -c parity     : Parity, 0(None), 1(Odd), 2(Even), 3(Mark),
                         4(Space) (default: 0)
         -s stopbits   : Stopbits, 1, 2 (default: 1)
-        -l loop_count : Loop count(>0) (default: 1)
-        -f            : Enable hardware flow control (default: no flow control)
+        -l loop_count : Loop count(1~2147483647) (default: 1)
+        -f            : Enable hardware flow control (default: no flow ctrl)
         -h            : Print this help message
 </pre>
 
