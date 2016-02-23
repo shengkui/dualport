@@ -63,7 +63,7 @@ static int exit_flag = 0;
  *      print_usage
  *
  * DESCRIPTION: 
- *      Print usage information
+ *      Print usage information of the program.
  *
  * PARAMETERS:
  *      None
@@ -152,7 +152,11 @@ int main(int argc, char *argv[])
 
     install_sig_handler();
 
-    // Init output buffer with chars in ASCII-table(ASCII code from 0 to 255)
+    /*
+     * Init output buffer with chars in ASCII-table(ASCII code from 0 to 255)
+     * NOTES: This must be done after setup_port has been called, because the
+     * data_bitmask is inited in the function setup_port.
+     */
     int i;
     for (i = 0; i < BUF_SIZE; i++) {
         obuf[i] = i % 0x100;
@@ -251,12 +255,12 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
     }
 
     /* Default value of parameters */
-    param->baudrate = 115200;
-    param->databits = 8;
-    param->stopbits = 1;
-    param->parity = 0;
+    param->baudrate = VAL_BAUDRATE;
+    param->databits = VAL_DATABITS;
+    param->stopbits = VAL_STOPBITS;
+    param->parity = VAL_PARITY;
     param->hwflow = 0;
-    param->loop_count = 1;
+    param->loop_count = VAL_LOOPCOUNT;
 
     while ((opt = getopt(argc, argv, ":b:d:c:s:l:fh")) != -1) {
         switch (opt) {
@@ -418,12 +422,12 @@ int setup_port(int fd, port_param_t *param)
         return -1;
     }
 
-    /* Set new flag */
     memcpy(&term_attr, &orig_term_attr, sizeof(struct termios));
 
     term_attr.c_oflag &= ~(OPOST | ONLCR | OCRNL);
     term_attr.c_lflag &= ~(ISIG | ECHO | ICANON | NOFLSH);
 
+    /* Enable receiver, ignore modem control lines. */
     term_attr.c_cflag |= CREAD | CLOCAL;
 
     /*
@@ -627,7 +631,7 @@ int read_data(int fd, void *buf, int len)
  *      len  - The count of data
  *
  * RETURN:
- *      Number of bytes wrote
+ *      Number of bytes actually written
  ******************************************************************************/
 int write_data(int fd, void *buf, int len)
 {
@@ -718,7 +722,8 @@ int buffer_compare(void *ibuf, void *obuf, size_t len)
  *      routine_read
  *
  * DESCRIPTION: 
- *      The thread routine to read data from serial port and verify with obuf
+ *      The thread routine to read data from serial port and verify with predefined
+ *      data pattern.
  *
  * PARAMETERS:
  *      thr_arg - Argument of thread routine (data type: thread_arg_t *)
@@ -931,7 +936,7 @@ int sleep_ms(unsigned int ms)
  *      is_all_digit
  *
  * DESCRIPTION: 
- *      Check if the string consist of only digits.
+ *      Check if the string consist of only digit chars.
  *
  * PARAMETERS:
  *      str - The string to check.
@@ -943,7 +948,7 @@ int sleep_ms(unsigned int ms)
 int is_all_digit(const char *str)
 {
     /* Handle empty string. */
-    if (!*str) {
+    if (!str || !*str) {
         return 0;
     }
 
