@@ -55,7 +55,7 @@ static const char parity_name[] = {
 };
 
 /* The flag to inform the program exit from the loop */
-static int exit_flag = 0;
+static int g_exit_flag = 0;
 
 
 /******************************************************************************
@@ -81,15 +81,15 @@ void print_usage(void)
         "\n"
         "Usage:\n"
         "  %s <port1> <port2> [OPTION] ...\n"
-        "      port1/port2   : Serial port, /dev/ttyS0, /dev/ttyS1, ...\n"
-        "      -b baudrate   : Baudrate, 9600, 19200, ... (default: %d)\n"
-        "      -d databits   : Databits, 5, 6, 7, 8 (default: %d)\n"
-        "      -c parity     : Parity, 0(None), 1(Odd), 2(Even), 3(Mark),\n"
-        "                      4(Space) (default: %d)\n"
-        "      -s stopbits   : Stopbits, 1, 2 (default: %d)\n"
-        "      -l loop_count : Loop count(1~%d) (default: %d)\n"
-        "      -f            : Enable hardware flow control (default: no flow ctrl)\n"
-        "      -h            : Print this help message\n"
+        "      port1/port2      Serial port: /dev/ttyS0, /dev/ttyS1, ...\n"
+        "      -b baudrate      Baudrate: 9600, 19200, ... (default: %d)\n"
+        "      -d databits      Databits: 5, 6, 7, 8 (default: %d)\n"
+        "      -c parity        Parity: 0(None), 1(Odd), 2(Even), 3(Mark),\n"
+        "                        4(Space) (default: %d)\n"
+        "      -s stopbits      Stopbits: 1, 2 (default: %d)\n"
+        "      -l loop_count    Loop count: 1~%d (default: %d)\n"
+        "      -f               Enable hardware flow control (default: no flow ctrl)\n"
+        "      -h               Print this help message\n"
         "\n"
         "Example:\n"
         "  %s /dev/ttyS0 /dev/ttyS1 -b 115200 -d 8 -c 0 -s 1 -l 100\n"
@@ -266,7 +266,7 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
         switch (opt) {
         case 'b':
             if (!is_all_digit(optarg)) {
-                CLI_OUT("Invalid argument (baudrate = %s)\n", optarg);
+                CLI_OUT("Invalid argument, \"baudrate\" should be an integer\n");
                 return ERR_INVALID_PARAM;
             }
             param->baudrate = atoi(optarg);
@@ -278,7 +278,7 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
 
         case 'd':
             if (!is_all_digit(optarg)) {
-                CLI_OUT("Invalid argument (databits = %s)\n", optarg);
+                CLI_OUT("Invalid argument, \"databits\" should be an integer\n");
                 return ERR_INVALID_PARAM;
             }
             param->databits = atoi(optarg);
@@ -290,7 +290,7 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
 
         case 'c':
             if (!is_all_digit(optarg)) {
-                CLI_OUT("Invalid argument (parity = %s)\n", optarg);
+                CLI_OUT("Invalid argument, \"parity\" should be an integer\n");
                 return ERR_INVALID_PARAM;
             }
             param->parity = atoi(optarg);
@@ -302,7 +302,7 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
 
         case 's':
             if (!is_all_digit(optarg)) {
-                CLI_OUT("Invalid argument (stopbits = %s)\n", optarg);
+                CLI_OUT("Invalid argument, \"stopbits\" should be an integer\n");
                 return ERR_INVALID_PARAM;
             }
             param->stopbits = atoi(optarg);
@@ -314,7 +314,7 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
 
         case 'l':
             if (!is_all_digit(optarg)) {
-                CLI_OUT("Invalid argument (loop_count = %s)\n", optarg);
+                CLI_OUT("Invalid argument, \"loop_count\" should be an integer\n");
                 return ERR_INVALID_PARAM;
             }
             param->loop_count = atoi(optarg);
@@ -753,7 +753,7 @@ void *routine_read(void *thr_arg)
     memset(ibuf, 0, BUF_SIZE);
 
     while (loop_count--) {
-        if (exit_flag) {
+        if (g_exit_flag) {
             break;
         }
 
@@ -765,7 +765,7 @@ void *routine_read(void *thr_arg)
         if (n != BUF_SIZE) {
             CLI_OUT("Read data error\n");
             buffer_dump_hex(ibuf, n);
-            exit_flag = 1;
+            g_exit_flag = 1;
             *(arg->byte_count) = bytes_read;
             pthread_exit((void *)ERR_READ_ERROR);
         }
@@ -779,7 +779,7 @@ void *routine_read(void *thr_arg)
         } else {
             CLI_OUT("\nVerify data error\n");
             buffer_dump_hex(ibuf, n);
-            exit_flag = 1;
+            g_exit_flag = 1;
             *(arg->byte_count) = bytes_read;
             pthread_exit((void *)ERR_VERIFY_ERROR);
         }
@@ -824,7 +824,7 @@ void *routine_write(void *thr_arg)
     int n;
 
     while (loop_count--) {
-        if (exit_flag) {
+        if (g_exit_flag) {
             break;
         }
 
@@ -835,7 +835,7 @@ void *routine_write(void *thr_arg)
         bytes_write += n;
         if (n != BUF_SIZE) {
             CLI_OUT("\nWrite data error\n");
-            exit_flag = 1;
+            g_exit_flag = 1;
             *(arg->byte_count) = bytes_write;
             pthread_exit((void*)ERR_WRITE_ERROR);
         }
@@ -867,7 +867,7 @@ void *routine_write(void *thr_arg)
  ******************************************************************************/
 void my_sig_handler(int signo)
 {
-    exit_flag = 1;
+    g_exit_flag = 1;
 }
 
 

@@ -19,7 +19,7 @@
  * Structure definition
  ******************************************************************************/
 
-/* Strucutre for thread argument */
+/* Structure for thread argument */
 typedef struct _thread_arg_t {
     int fd;                     /* The fd of serial port */
     int loop;                   /* loop times */
@@ -27,13 +27,13 @@ typedef struct _thread_arg_t {
     unsigned long *byte_count;  /* Bytes received/sent */
 } thread_arg_t;
 
-/* Strucutre for baudrate and flag */
+/* Structure for baudrate and flag */
 typedef struct _baud_item_t {
     int speed;                  /* The baudrate */
     int baud_flag;              /* The flag used to set the baudrate */
 } baud_item_t;
 
-/* Strucutre for parameter */
+/* Structure for parameter */
 typedef struct _port_param_t {
     char *device1;  /* The 1st serial port */
     char *device2;  /* The 2nd serial port */
@@ -71,6 +71,7 @@ int is_all_digit(const char *str);
  ******************************************************************************/
 #ifdef DEBUG
 
+/* Macro to print debug message to stdout */
 #define DBG_PRINT(format, ...) \
     do { \
         printf("[%s@%s, %d]: " format, \
@@ -99,7 +100,7 @@ int is_all_digit(const char *str);
 /* Compute the dimension of an array */
 #define DIM(a)                  (sizeof(a) / sizeof((a)[0]))
 
-/* Max retry count on read operation */
+/* Max retry times on read operation */
 #define MAX_RETRY_COUNT         3
 
 /* Size of in/out buffer */
