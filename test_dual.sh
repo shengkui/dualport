@@ -35,6 +35,7 @@ while [ $n -lt $count ] ;do
     let n=n+1
 
     if [ $n -ge $count ] ;then
+        echo "skip $sport1"
         break;
     fi
 
@@ -45,7 +46,7 @@ while [ $n -lt $count ] ;do
     $DUALPORT /dev/$sport1 /dev/$sport2 -b $BAUDRATE -l $LOOP_COUNT
     if [ $? -ne 0 ];then
         result=1
-        echo "ERROR on $sport1 and $sport2"
+        echo "ERROR on testing $sport1 and $sport2"
     fi
 done
 
