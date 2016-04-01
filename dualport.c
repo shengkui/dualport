@@ -223,8 +223,6 @@ int main(int argc, char *argv[])
         rc = ERR_OK;
     }
 
-    reset_port(fd1);
-    reset_port(fd2);
     close(fd1);
     close(fd2);
     return rc;
