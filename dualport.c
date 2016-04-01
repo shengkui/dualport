@@ -761,7 +761,7 @@ void *routine_read(void *thr_arg)
         n = read_data(fd, ibuf, BUF_SIZE);
         bytes_read += n;
         if (n != BUF_SIZE) {
-            CLI_OUT("Read data error\n");
+            CLI_OUT("Received data is less than expected\n");
             buffer_dump_hex(ibuf, n);
             g_exit_flag = 1;
             *(arg->byte_count) = bytes_read;
@@ -832,7 +832,7 @@ void *routine_write(void *thr_arg)
         n = write_data(fd, obuf, BUF_SIZE);
         bytes_write += n;
         if (n != BUF_SIZE) {
-            CLI_OUT("\nWrite data error\n");
+            CLI_OUT("\nNOT all data sent\n");
             g_exit_flag = 1;
             *(arg->byte_count) = bytes_write;
             pthread_exit((void*)ERR_WRITE_ERROR);
