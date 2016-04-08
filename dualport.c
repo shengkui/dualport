@@ -88,6 +88,8 @@ void print_usage(void)
         "                        4(Space) (default: %d)\n"
         "      -s stopbits      Stopbits: 1, 2 (default: %d)\n"
         "      -l loop_count    Loop count: 1~%d (default: %d)\n"
+        "      -i interval      The interval(miliseconds) between 2 packets:\n"
+        "                        0~%d (default: %u)\n"
         "      -f               Enable hardware flow control (default: no flow ctrl)\n"
         "      -h               Print this help message\n"
         "\n"
@@ -96,7 +98,8 @@ void print_usage(void)
         "  %s /dev/ttyS0 /dev/ttyS1 -l 200\n"
         "\n",
         PROGRAM_VERSION, pname, VAL_BAUDRATE, VAL_DATABITS, VAL_PARITY,
-        VAL_STOPBITS, INT_MAX, VAL_LOOPCOUNT, pname, pname);
+        VAL_STOPBITS, INT_MAX, VAL_LOOPCOUNT, INT_MAX, VAL_INTERVAL,
+        pname, pname);
 }
 
 
@@ -121,10 +124,10 @@ int main(int argc, char *argv[])
     if (rc != ERR_OK) {
         return rc;
     }
-    CLI_OUT("%s<==>%s (%d %d%c%d) (flow ctrl: %s) (loop %d)\n",
+    CLI_OUT("%s<==>%s (%d %d%c%d) (flow ctrl: %s) (loop %d) (interval %u)\n",
         param.device1, param.device2, param.baudrate, param.databits,
         parity_name[param.parity], param.stopbits, param.hwflow ? "HW" : "No",
-        param.loop_count);
+        param.loop_count, param.interval);
 
     int fd1 = open(param.device1, O_RDWR);
     if (fd1 < 0) {
@@ -178,21 +181,25 @@ int main(int argc, char *argv[])
     arg_read1.data_buf = cmp_buf;
     arg_read1.loop = param.loop_count;
     arg_read1.byte_count = &total_bytes_read1;
+    arg_read1.interval = 0;
 
     arg_read2.fd = fd2;
     arg_read2.data_buf = cmp_buf;
     arg_read2.loop = param.loop_count;
     arg_read2.byte_count = &total_bytes_read2;
+    arg_read2.interval = 0;
 
     arg_write1.fd = fd1;
     arg_write1.data_buf = obuf;
     arg_write1.loop = param.loop_count;
     arg_write1.byte_count = &total_bytes_write1;
+    arg_write1.interval = param.interval;
 
     arg_write2.fd = fd2;
     arg_write2.data_buf = obuf;
     arg_write2.loop = param.loop_count;
     arg_write2.byte_count = &total_bytes_write2;
+    arg_write2.interval = param.interval;
 
     /* Start threads to do Read&Verify/Write */
     pthread_create(&thr_id_read1, NULL, routine_read, &arg_read1);
@@ -259,8 +266,9 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
     param->parity = VAL_PARITY;
     param->hwflow = 0;
     param->loop_count = VAL_LOOPCOUNT;
+    param->interval = VAL_INTERVAL;
 
-    while ((opt = getopt(argc, argv, ":b:d:c:s:l:fh")) != -1) {
+    while ((opt = getopt(argc, argv, ":b:d:c:s:l:i:fh")) != -1) {
         switch (opt) {
         case 'b':
             if (!is_all_digit(optarg)) {
@@ -319,6 +327,19 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
             if (param->loop_count < 1) {
                 CLI_OUT("Invalid argument (loop_count = %d)\n",
                     param->loop_count);
+                return ERR_INVALID_PARAM;
+            }
+            break;
+
+        case 'i':
+            if (!is_all_digit(optarg)) {
+                CLI_OUT("Invalid argument, \"interval\" should be an integer\n");
+                return ERR_INVALID_PARAM;
+            }
+            param->interval = atoi(optarg);
+            if (param->interval < 0) {
+                CLI_OUT("Invalid argument (interval = %d)\n",
+                    param->interval);
                 return ERR_INVALID_PARAM;
             }
             break;
@@ -820,6 +841,7 @@ void *routine_write(void *thr_arg)
     int loop_count = arg->loop;
     int fd = arg->fd;
     int n;
+    unsigned int interval = arg->interval;
 
     while (loop_count--) {
         if (g_exit_flag) {
@@ -841,7 +863,7 @@ void *routine_write(void *thr_arg)
         DBG_DUMP(obuf, n);
         DBG_PRINT("Write done\n\n");
 
-        sleep_ms(2);
+        sleep_ms(interval);
     }
 
     *(arg->byte_count) = bytes_write;
