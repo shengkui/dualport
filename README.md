@@ -26,6 +26,8 @@ Following are the arguments/options of the program:
                           4(Space) (default: 0)
         -s stopbits      Stopbits: 1, 2 (default: 1)
         -l loop_count    Loop count: 1~2147483647 (default: 1)
+        -i interval      The interval(miliseconds) between 2 packets:
+                          0~2147483647 (default: 10)
         -f               Enable hardware flow control (default: no flow ctrl)
         -h               Print this help message
 
