@@ -26,6 +26,7 @@ typedef struct _thread_arg_t {
     unsigned char *data_buf;    /* The buffer to keep the chars to send or compare */
     unsigned long *byte_count;  /* Bytes received/sent */
     unsigned int interval;      /* The intervals(miliseconds) between 2 packets */
+    unsigned int packet_size;   /* The size of data sent in each write operation */
 } thread_arg_t;
 
 /* Structure for baudrate and flag */
@@ -45,6 +46,7 @@ typedef struct _port_param_t {
     int hwflow;     /* Enable hardware flow control or not */
     int loop_count; /* Loop count for test */
     unsigned int interval;   /* The intervals(miliseconds) between 2 packets */
+    unsigned int packet_size;   /* The size of data sent in each write operation */
 } port_param_t;
 
 
@@ -115,7 +117,9 @@ int is_all_digit(const char *str);
 #define VAL_PARITY      0
 #define VAL_LOOPCOUNT   1
 #define VAL_INTERVAL    10
+#define VAL_PACKETSIZE  256
 
+#define MAX_PACKETSIZE  4096
 
 /* Error codes */
 #define ERR_OK                  0

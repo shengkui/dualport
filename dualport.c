@@ -26,7 +26,7 @@
 #include "dualport.h"
 
 /* Version of this program */
-#define PROGRAM_VERSION         "0.8"
+#define PROGRAM_VERSION         "0.9"
 
 /* The name of this program */
 static char *pname = "dualport";
@@ -90,6 +90,7 @@ void print_usage(void)
         "      -l loop_count    Loop count: 1~%d (default: %d)\n"
         "      -i interval      The interval(miliseconds) between 2 packets:\n"
         "                        0~%d (default: %u)\n"
+        "      -p packet_size   Bytes sent in each write operation: 1~%d (default: %d)\n"
         "      -f               Enable hardware flow control (default: no flow ctrl)\n"
         "      -h               Print this help message\n"
         "\n"
@@ -99,6 +100,7 @@ void print_usage(void)
         "\n",
         PROGRAM_VERSION, pname, VAL_BAUDRATE, VAL_DATABITS, VAL_PARITY,
         VAL_STOPBITS, INT_MAX, VAL_LOOPCOUNT, INT_MAX, VAL_INTERVAL,
+        MAX_PACKETSIZE, VAL_PACKETSIZE,
         pname, pname);
 }
 
@@ -107,8 +109,8 @@ int main(int argc, char *argv[])
 {
     int rc = ERR_OK;
     port_param_t param;
-    unsigned char obuf[BUF_SIZE];       /* Buffer to sotre output data */
-    unsigned char cmp_buf[BUF_SIZE];    /* Buffer to compare with received data */
+    unsigned char *obuf;       /* Buffer to sotre output data */
+    unsigned char *cmp_buf;    /* Buffer to compare with received data */
 
     pname = argv[0];
 
@@ -124,11 +126,12 @@ int main(int argc, char *argv[])
     if (rc != ERR_OK) {
         return rc;
     }
-    CLI_OUT("%s<==>%s (%d %d%c%d) (flow ctrl: %s) (loop %d) (interval %u)\n",
+    CLI_OUT("%s<==>%s (%d %d%c%d) (flow ctrl: %s) (loop %d) (interval %u) (packet size %u)\n",
         param.device1, param.device2, param.baudrate, param.databits,
         parity_name[param.parity], param.stopbits, param.hwflow ? "HW" : "No",
-        param.loop_count, param.interval);
+        param.loop_count, param.interval, param.packet_size);
 
+    /* Open ports */
     int fd1 = open(param.device1, O_RDWR);
     if (fd1 < 0) {
         CLI_OUT("open <%s> error: %s\n", param.device1, strerror(errno));
@@ -140,6 +143,7 @@ int main(int argc, char *argv[])
         return ERR_OPEN_ERROR;
     }
 
+    /* Setup ports */
     if (setup_port(fd1, &param)) {
         CLI_OUT("setup <%s> error\n", param.device1);
         close(fd1);
@@ -155,13 +159,30 @@ int main(int argc, char *argv[])
 
     install_sig_handler();
 
+    /* Allocate memory for output buffer */
+    obuf = malloc(param.packet_size);
+    if (obuf == NULL) {
+        CLI_OUT("Allocate buffer error\n");
+        close(fd1);
+        close(fd2);
+        return ENOMEM;
+    }
+    cmp_buf = malloc(param.packet_size);
+    if (cmp_buf == NULL) {
+        CLI_OUT("Allocate buffer error\n");
+        close(fd1);
+        close(fd2);
+        free(obuf);
+        return ENOMEM;
+    }
+
     /*
      * Init output buffer with chars in ASCII-table(ASCII code from 0 to 255)
      * NOTES: This must be done after setup_port has been called, because the
      * data_bitmask is inited in the function setup_port.
      */
     int i;
-    for (i = 0; i < BUF_SIZE; i++) {
+    for (i = 0; i < param.packet_size; i++) {
         obuf[i] = i % 0x100;
         cmp_buf[i] = obuf[i] & data_bitmask;
     }
@@ -232,6 +253,8 @@ int main(int argc, char *argv[])
 
     close(fd1);
     close(fd2);
+    free(obuf);
+    free(cmp_buf);
     return rc;
 }
 
@@ -267,8 +290,9 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
     param->hwflow = 0;
     param->loop_count = VAL_LOOPCOUNT;
     param->interval = VAL_INTERVAL;
+    param->packet_size = VAL_PACKETSIZE;
 
-    while ((opt = getopt(argc, argv, ":b:d:c:s:l:i:fh")) != -1) {
+    while ((opt = getopt(argc, argv, ":b:d:c:s:l:i:p:fh")) != -1) {
         switch (opt) {
         case 'b':
             if (!is_all_digit(optarg)) {
@@ -340,6 +364,18 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
             if (param->interval < 0) {
                 CLI_OUT("Invalid argument (interval = %d)\n",
                     param->interval);
+                return ERR_INVALID_PARAM;
+            }
+            break;
+
+        case 'p':
+            if (!is_all_digit(optarg)) {
+                CLI_OUT("Invalid argument, \"packet size\" should be an integer\n");
+                return ERR_INVALID_PARAM;
+            }
+            param->packet_size = atoi(optarg);
+            if ((param->packet_size < 1) || (param->packet_size > MAX_PACKETSIZE)) {
+                CLI_OUT("Invalid argument (packet size = %d)\n", param->packet_size);
                 return ERR_INVALID_PARAM;
             }
             break;
@@ -764,12 +800,18 @@ void *routine_read(void *thr_arg)
         pthread_exit((void *)ERR_INVALID_PARAM);
     }
 
+    long rc = ERR_OK;
     unsigned long bytes_read = 0;
     int n;
     int fd = arg->fd;
     int loop_count = arg->loop;
-    unsigned char ibuf[BUF_SIZE];
-    memset(ibuf, 0, BUF_SIZE);
+    unsigned int pack_size = arg->packet_size;
+    unsigned char *ibuf = malloc(pack_size);
+    if (ibuf == NULL) {
+        CLI_OUT("Allocate buffer error\n");
+        pthread_exit((void *)ENOMEM);
+    }
+    memset(ibuf, 0, pack_size);
 
     while (loop_count--) {
         if (g_exit_flag) {
@@ -779,20 +821,21 @@ void *routine_read(void *thr_arg)
         DBG_PRINT("Read data ...\n");
 
         /* Read data from serial port */
-        n = read_data(fd, ibuf, BUF_SIZE);
+        n = read_data(fd, ibuf, pack_size);
         bytes_read += n;
-        if (n != BUF_SIZE) {
+        if (n != pack_size) {
             CLI_OUT("Received data is less than expected\n");
             buffer_dump_hex(ibuf, n);
             g_exit_flag = 1;
             *(arg->byte_count) = bytes_read;
-            pthread_exit((void *)ERR_READ_ERROR);
+            rc = ERR_READ_ERROR;
+            break;
         }
         DBG_DUMP(ibuf, n);
         DBG_PRINT("Read done\n\n");
 
         /* Verify data */
-        if (VERIFY_DATA(ibuf, cmp_buf, BUF_SIZE) == 0) {
+        if (VERIFY_DATA(ibuf, cmp_buf, pack_size) == 0) {
             CLI_OUT(".");
             fflush(stdout);
         } else {
@@ -800,13 +843,15 @@ void *routine_read(void *thr_arg)
             buffer_dump_hex(ibuf, n);
             g_exit_flag = 1;
             *(arg->byte_count) = bytes_read;
-            pthread_exit((void *)ERR_VERIFY_ERROR);
+            rc = ERR_VERIFY_ERROR;
+            break;
         }
         DBG_PRINT("Verify done\n\n");
     }
 
+    free(ibuf);
     *(arg->byte_count) = bytes_read;
-    pthread_exit((void*)ERR_OK);
+    pthread_exit((void*)rc);
 }
 
 
@@ -837,11 +882,13 @@ void *routine_write(void *thr_arg)
         pthread_exit((void *)ERR_INVALID_PARAM);
     }
 
+    long rc = ERR_OK;
     unsigned long bytes_write = 0;
     int loop_count = arg->loop;
     int fd = arg->fd;
     int n;
     unsigned int interval = arg->interval;
+    unsigned int pack_size = arg->packet_size;
 
     while (loop_count--) {
         if (g_exit_flag) {
@@ -851,13 +898,14 @@ void *routine_write(void *thr_arg)
         DBG_PRINT("Write data ...\n");
 
         /* Write data to serial port */
-        n = write_data(fd, obuf, BUF_SIZE);
+        n = write_data(fd, obuf, pack_size);
         bytes_write += n;
-        if (n != BUF_SIZE) {
+        if (n != pack_size) {
             CLI_OUT("\nNOT all data sent\n");
             g_exit_flag = 1;
             *(arg->byte_count) = bytes_write;
-            pthread_exit((void*)ERR_WRITE_ERROR);
+            rc = ERR_WRITE_ERROR;
+            break;
         }
 
         DBG_DUMP(obuf, n);
@@ -867,7 +915,7 @@ void *routine_write(void *thr_arg)
     }
 
     *(arg->byte_count) = bytes_write;
-    pthread_exit((void*)ERR_OK);
+    pthread_exit((void*)rc);
 }
 
 
