@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
 {
     int rc = ERR_OK;
     port_param_t param;
-    unsigned char *obuf;       /* Buffer to sotre output data */
+    unsigned char *obuf;       /* Buffer to store output data */
     unsigned char *cmp_buf;    /* Buffer to compare with received data */
 
     pname = argv[0];
