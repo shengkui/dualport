@@ -90,7 +90,7 @@ void print_usage(void)
         "      -l loop_count    Loop count: 1~%d (default: %d)\n"
         "      -i interval      The interval(miliseconds) between 2 packets:\n"
         "                        0~%d (default: %u)\n"
-        "      -p packet_size   Bytes sent in each write operation: 1~%d (default: %d)\n"
+        "      -p packet_size   Size of data packet: 1~%d (default: %d)\n"
         "      -f               Enable hardware flow control (default: no flow ctrl)\n"
         "      -h               Print this help message\n"
         "\n"

@@ -28,7 +28,7 @@ Following are the arguments/options of the program:
         -l loop_count    Loop count: 1~2147483647 (default: 1)
         -i interval      The interval(miliseconds) between 2 packets:
                           0~2147483647 (default: 10)
-        -p packet_size   Byte sent in each write operation: 1~4096 (default: 256)
+        -p packet_size   Size of data packet: 1~4096 (default: 256)
         -f               Enable hardware flow control (default: no flow ctrl)
         -h               Print this help message
 

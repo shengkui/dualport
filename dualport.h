@@ -26,7 +26,7 @@ typedef struct _thread_arg_t {
     unsigned char *data_buf;    /* The buffer to keep the chars to send or compare */
     unsigned long *byte_count;  /* Bytes received/sent */
     unsigned int interval;      /* The intervals(miliseconds) between 2 packets */
-    unsigned int packet_size;   /* The size of data sent in each write operation */
+    unsigned int packet_size;   /* The size of data packet */
 } thread_arg_t;
 
 /* Structure for baudrate and flag */
@@ -46,7 +46,7 @@ typedef struct _port_param_t {
     int hwflow;     /* Enable hardware flow control or not */
     int loop_count; /* Loop count for test */
     unsigned int interval;   /* The intervals(miliseconds) between 2 packets */
-    unsigned int packet_size;   /* The size of data sent in each write operation */
+    unsigned int packet_size;   /* The size of data packet */
 } port_param_t;
 
 
