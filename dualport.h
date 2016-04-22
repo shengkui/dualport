@@ -47,6 +47,7 @@ typedef struct _port_param_t {
     int loop_count; /* Loop count for test */
     unsigned int interval;   /* The intervals(miliseconds) between 2 packets */
     unsigned int packet_size;   /* The size of data packet */
+    unsigned char data_bitmask; /* Databits mask */
 } port_param_t;
 
 

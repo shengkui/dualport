@@ -46,8 +46,6 @@ static int max_baud_item = DIM(baud_array);
 
 static struct termios orig_term_attr;
 
-/* Databits mask */
-static unsigned char data_bitmask = 0xFF;
 
 /* Friendly-name of parity */
 static const char parity_name[] = {
@@ -179,12 +177,12 @@ int main(int argc, char *argv[])
     /*
      * Init output buffer with chars in ASCII-table(ASCII code from 0 to 255)
      * NOTES: This must be done after setup_port has been called, because the
-     * data_bitmask is inited in the function setup_port.
+     * packet_size and data_bitmask are inited in the function setup_port.
      */
     int i;
     for (i = 0; i < param.packet_size; i++) {
         obuf[i] = i % 0x100;
-        cmp_buf[i] = obuf[i] & data_bitmask;
+        cmp_buf[i] = obuf[i] & param.data_bitmask;
     }
 
     /* The total bytes sent/received */
@@ -291,6 +289,7 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
     param->loop_count = VAL_LOOPCOUNT;
     param->interval = VAL_INTERVAL;
     param->packet_size = VAL_PACKETSIZE;
+    param->data_bitmask = 0xFF;
 
     while ((opt = getopt(argc, argv, ":b:d:c:s:l:i:p:fh")) != -1) {
         switch (opt) {
@@ -536,7 +535,7 @@ int setup_port(int fd, port_param_t *param)
         CLI_OUT("Invalid databits: %d\n", param->databits);
         return -1;
     }
-    data_bitmask = ((1 << param->databits) - 1) & 0xFF;
+    param->data_bitmask = ((1 << param->databits) - 1) & 0xFF;
 
     /* Set parity */
     switch (param->parity) {
