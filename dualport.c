@@ -88,7 +88,7 @@ void print_usage(void)
         "      -l loop_count    Loop count: 1~%d (default: %d)\n"
         "      -i interval      The interval(miliseconds) between 2 packets:\n"
         "                        0~%d (default: %u)\n"
-        "      -p packet_size   Size of data packet: 1~%d (default: %d)\n"
+        "      -t packet_size   Size of data packet: 1~%d (default: %d)\n"
         "      -f               Enable hardware flow control (default: no flow ctrl)\n"
         "      -h               Print this help message\n"
         "\n"
@@ -291,7 +291,7 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
     param->packet_size = VAL_PACKETSIZE;
     param->data_bitmask = 0xFF;
 
-    while ((opt = getopt(argc, argv, ":b:d:c:s:l:i:p:fh")) != -1) {
+    while ((opt = getopt(argc, argv, ":b:d:c:s:l:i:t:fh")) != -1) {
         switch (opt) {
         case 'b':
             if (!is_all_digit(optarg)) {
@@ -361,13 +361,12 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
             }
             param->interval = atoi(optarg);
             if (param->interval < 0) {
-                CLI_OUT("Invalid argument (interval = %d)\n",
-                    param->interval);
+                CLI_OUT("Invalid argument (interval = %d)\n", param->interval);
                 return ERR_INVALID_PARAM;
             }
             break;
 
-        case 'p':
+        case 't':
             if (!is_all_digit(optarg)) {
                 CLI_OUT("Invalid argument, \"packet size\" should be an integer\n");
                 return ERR_INVALID_PARAM;
