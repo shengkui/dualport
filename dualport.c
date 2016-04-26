@@ -201,24 +201,28 @@ int main(int argc, char *argv[])
     arg_read1.loop = param.loop_count;
     arg_read1.byte_count = &total_bytes_read1;
     arg_read1.interval = 0;
+    arg_read1.packet_size = param.packet_size;
 
     arg_read2.fd = fd2;
     arg_read2.data_buf = cmp_buf;
     arg_read2.loop = param.loop_count;
     arg_read2.byte_count = &total_bytes_read2;
     arg_read2.interval = 0;
+    arg_read2.packet_size = param.packet_size;
 
     arg_write1.fd = fd1;
     arg_write1.data_buf = obuf;
     arg_write1.loop = param.loop_count;
     arg_write1.byte_count = &total_bytes_write1;
     arg_write1.interval = param.interval;
+    arg_write1.packet_size = param.packet_size;
 
     arg_write2.fd = fd2;
     arg_write2.data_buf = obuf;
     arg_write2.loop = param.loop_count;
     arg_write2.byte_count = &total_bytes_write2;
     arg_write2.interval = param.interval;
+    arg_write2.packet_size = param.packet_size;
 
     /* Start threads to do Read&Verify/Write */
     pthread_create(&thr_id_read1, NULL, routine_read, &arg_read1);
