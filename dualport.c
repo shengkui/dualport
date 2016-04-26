@@ -17,6 +17,8 @@
 #include <ctype.h>
 #include <limits.h>
 #include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -109,6 +111,7 @@ int main(int argc, char *argv[])
     port_param_t param;
     unsigned char *obuf;       /* Buffer to store output data */
     unsigned char *cmp_buf;    /* Buffer to compare with received data */
+    struct stat st;
 
     pname = argv[0];
 
@@ -119,6 +122,14 @@ int main(int argc, char *argv[])
 
     param.device1 = argv[1];
     param.device2 = argv[2];
+    if (stat(param.device1, &st) != 0) {
+        CLI_OUT("The device \"%s\" is not exist or accessable\n", param.device1);
+        return ERR_INVALID_PARAM;
+    }
+    if (stat(param.device2, &st) != 0) {
+        CLI_OUT("The device \"%s\" is not exist or accessable\n", param.device2);
+        return ERR_INVALID_PARAM;
+    }
 
     rc = parse_argument(argc-2, &argv[2], &param);
     if (rc != ERR_OK) {
