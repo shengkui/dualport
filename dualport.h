@@ -22,7 +22,7 @@
 /* Structure for thread argument */
 typedef struct _thread_arg_t {
     int fd;                     /* The fd of serial port */
-    int loop;                   /* loop times */
+    unsigned int loop;          /* loop times */
     unsigned char *data_buf;    /* The buffer to keep the chars to send or compare */
     unsigned long *byte_count;  /* Bytes received/sent */
     unsigned int interval;      /* The intervals(miliseconds) between 2 packets */
@@ -35,7 +35,8 @@ typedef struct _baud_item_t {
     int baud_flag;              /* The flag used to set the baudrate */
 } baud_item_t;
 
-/* Structure for parameter */
+
+/* Structure for parameter of serial port */
 typedef struct _port_param_t {
     char device1[PATH_MAX];  /* The 1st serial port */
     char device2[PATH_MAX];  /* The 2nd serial port */
@@ -44,8 +45,8 @@ typedef struct _port_param_t {
     int stopbits;   /* Stopbits of serial port */
     int parity;     /* Parity of serial port */
     int hwflow;     /* Enable hardware flow control or not */
-    int loop_count; /* Loop count for test */
-    unsigned int interval;   /* The intervals(miliseconds) between 2 packets */
+    unsigned int loop_count;    /* Loop count for test */
+    unsigned int interval;      /* The intervals(miliseconds) between 2 packets */
     unsigned int packet_size;   /* The size of data packet */
     unsigned char data_bitmask; /* Databits mask */
 } port_param_t;
@@ -108,9 +109,6 @@ int is_all_digit(const char *str);
 
 /* Max retry times on read operation */
 #define MAX_RETRY_COUNT         3
-
-/* Size of in/out buffer */
-#define BUF_SIZE                256
 
 /* Default value of arguments/parameters */
 #define VAL_BAUDRATE    115200

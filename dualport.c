@@ -87,7 +87,7 @@ void print_usage(void)
         "      -c parity        Parity: 0(None), 1(Odd), 2(Even), 3(Mark),\n"
         "                        4(Space) (default: %d)\n"
         "      -s stopbits      Stopbits: 1, 2 (default: %d)\n"
-        "      -l loop_count    Loop count: 1~%d (default: %d)\n"
+        "      -l loop_count    Loop count: 1~%u (default: %d)\n"
         "      -i interval      The interval(miliseconds) between 2 packets:\n"
         "                        0~%d (default: %u)\n"
         "      -t packet_size   Size of data packet: 1~%d (default: %d)\n"
@@ -99,7 +99,7 @@ void print_usage(void)
         "  %s /dev/ttyS0 /dev/ttyS1 -l 200\n"
         "\n",
         PROGRAM_VERSION, pname, VAL_BAUDRATE, VAL_DATABITS, VAL_PARITY,
-        VAL_STOPBITS, INT_MAX, VAL_LOOPCOUNT, INT_MAX, VAL_INTERVAL,
+        VAL_STOPBITS, UINT_MAX, VAL_LOOPCOUNT, INT_MAX, VAL_INTERVAL,
         MAX_PACKETSIZE, VAL_PACKETSIZE,
         pname, pname);
 }
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
     if (rc != ERR_OK) {
         return rc;
     }
-    CLI_OUT("%s<==>%s (%d %d%c%d) (flow ctrl: %s) (loop %d) (interval %u) (packet size %u)\n",
+    CLI_OUT("%s<==>%s (%d %d%c%d) (flow ctrl: %s) (loop %u) (interval %u) (packet size %u)\n",
         param.device1, param.device2, param.baudrate, param.databits,
         parity_name[param.parity], param.stopbits, param.hwflow ? "HW" : "No",
         param.loop_count, param.interval, param.packet_size);
@@ -396,7 +396,7 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
                 CLI_OUT("Invalid argument, \"loop_count\" should be an integer\n");
                 return ERR_INVALID_PARAM;
             }
-            param->loop_count = atoi(optarg);
+            param->loop_count = strtoul(optarg, NULL, 0);
             if (param->loop_count < 1) {
                 CLI_OUT("Invalid argument (loop_count = %d)\n",
                     param->loop_count);
@@ -409,7 +409,7 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
                 CLI_OUT("Invalid argument, \"interval\" should be an integer\n");
                 return ERR_INVALID_PARAM;
             }
-            param->interval = atoi(optarg);
+            param->interval = strtoul(optarg, NULL, 0);
             if (param->interval < 0) {
                 CLI_OUT("Invalid argument (interval = %d)\n", param->interval);
                 return ERR_INVALID_PARAM;
@@ -852,7 +852,7 @@ void *routine_read(void *thr_arg)
     unsigned long bytes_read = 0;
     int n;
     int fd = arg->fd;
-    int loop_count = arg->loop;
+    unsigned int loop_count = arg->loop;
     unsigned int pack_size = arg->packet_size;
     unsigned char *ibuf = malloc(pack_size);
     if (ibuf == NULL) {
@@ -932,7 +932,7 @@ void *routine_write(void *thr_arg)
 
     long rc = ERR_OK;
     unsigned long bytes_write = 0;
-    int loop_count = arg->loop;
+    unsigned int loop_count = arg->loop;
     int fd = arg->fd;
     int n;
     unsigned int interval = arg->interval;
