@@ -37,8 +37,8 @@ typedef struct _baud_item_t {
 
 /* Structure for parameter */
 typedef struct _port_param_t {
-    char *device1;  /* The 1st serial port */
-    char *device2;  /* The 2nd serial port */
+    char device1[PATH_MAX];  /* The 1st serial port */
+    char device2[PATH_MAX];  /* The 2nd serial port */
     int baudrate;   /* Baudrate of serial port */
     int databits;   /* Databits of serial port */
     int stopbits;   /* Stopbits of serial port */
@@ -55,6 +55,7 @@ typedef struct _port_param_t {
  * Function declaration
  ******************************************************************************/
 void print_usage(void);
+int check_portname(char *argv[], port_param_t *param);
 int parse_argument(int argc, char *argv[], port_param_t *param);
 int speed_to_flag(int speed);
 int setup_port(int fd, port_param_t *param);

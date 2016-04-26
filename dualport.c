@@ -81,7 +81,7 @@ void print_usage(void)
         "\n"
         "Usage:\n"
         "  %s <port1> <port2> [OPTION] ...\n"
-        "      port1/port2      Serial port: /dev/ttyS0, /dev/ttyS1, ...\n"
+        "      port1/port2      Serial port: ttyS0(/dev/ttyS0), ttyS1(/dev/ttyS1), ...\n"
         "      -b baudrate      Baudrate: 9600, 19200, ... (default: %d)\n"
         "      -d databits      Databits: 5, 6, 7, 8 (default: %d)\n"
         "      -c parity        Parity: 0(None), 1(Odd), 2(Even), 3(Mark),\n"
@@ -95,7 +95,7 @@ void print_usage(void)
         "      -h               Print this help message\n"
         "\n"
         "Example:\n"
-        "  %s /dev/ttyS0 /dev/ttyS1 -b 115200 -d 8 -c 0 -s 1 -l 100\n"
+        "  %s ttyS0 ttyS1 -b 115200 -d 8 -c 0 -s 1 -l 100\n"
         "  %s /dev/ttyS0 /dev/ttyS1 -l 200\n"
         "\n",
         PROGRAM_VERSION, pname, VAL_BAUDRATE, VAL_DATABITS, VAL_PARITY,
@@ -111,7 +111,6 @@ int main(int argc, char *argv[])
     port_param_t param;
     unsigned char *obuf;       /* Buffer to store output data */
     unsigned char *cmp_buf;    /* Buffer to compare with received data */
-    struct stat st;
 
     pname = argv[0];
 
@@ -120,15 +119,9 @@ int main(int argc, char *argv[])
         return ERR_INVALID_PARAM;
     }
 
-    param.device1 = argv[1];
-    param.device2 = argv[2];
-    if (stat(param.device1, &st) != 0) {
-        CLI_OUT("The device \"%s\" is not exist or accessable\n", param.device1);
-        return ERR_INVALID_PARAM;
-    }
-    if (stat(param.device2, &st) != 0) {
-        CLI_OUT("The device \"%s\" is not exist or accessable\n", param.device2);
-        return ERR_INVALID_PARAM;
+    rc = check_portname(argv, &param);
+    if (rc != ERR_OK) {
+        return rc;
     }
 
     rc = parse_argument(argc-2, &argv[2], &param);
@@ -269,6 +262,48 @@ int main(int argc, char *argv[])
     free(obuf);
     free(cmp_buf);
     return rc;
+}
+
+
+/******************************************************************************
+ * NAME:
+ *      check_portname
+ *
+ * DESCRIPTION: 
+ *      Build the full path of serial port and check if it's exist or not.
+ *
+ * PARAMETERS:
+ *      argv  - Arguments array
+ *      param - Output the port name of serial port. 
+ *
+ * RETURN:
+ *      0 for OK, others for ERROR
+ ******************************************************************************/
+int check_portname(char *argv[], port_param_t *param)
+{
+    struct stat st;
+
+    if (argv[1][0] == '/') {
+        snprintf(param->device1, sizeof(param->device1), "%s", argv[1]);
+    } else {
+        snprintf(param->device1, sizeof(param->device1), "/dev/%s", argv[1]);
+    }
+    if (argv[2][0] == '/') {
+        snprintf(param->device2, sizeof(param->device2), "%s", argv[2]);
+    } else {
+        snprintf(param->device2, sizeof(param->device2), "/dev/%s", argv[2]);
+    }
+
+    if (stat(param->device1, &st) != 0) {
+        CLI_OUT("The device \"%s\" is not exist or accessable\n", param->device1);
+        return ERR_INVALID_PARAM;
+    }
+    if (stat(param->device2, &st) != 0) {
+        CLI_OUT("The device \"%s\" is not exist or accessable\n", param->device2);
+        return ERR_INVALID_PARAM;
+    }
+
+    return ERR_OK;
 }
 
 
