@@ -875,7 +875,6 @@ void *routine_read(void *thr_arg)
             CLI_OUT("Received data is less than expected\n");
             buffer_dump_hex(ibuf, n);
             g_exit_flag = 1;
-            *(arg->byte_count) = bytes_read;
             rc = ERR_READ_ERROR;
             break;
         }
@@ -890,7 +889,6 @@ void *routine_read(void *thr_arg)
             CLI_OUT("\nVerify data error\n");
             buffer_dump_hex(ibuf, n);
             g_exit_flag = 1;
-            *(arg->byte_count) = bytes_read;
             rc = ERR_VERIFY_ERROR;
             break;
         }
@@ -951,7 +949,6 @@ void *routine_write(void *thr_arg)
         if (n != pack_size) {
             CLI_OUT("\nNOT all data sent\n");
             g_exit_flag = 1;
-            *(arg->byte_count) = bytes_write;
             rc = ERR_WRITE_ERROR;
             break;
         }
