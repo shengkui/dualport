@@ -22,7 +22,7 @@
 /* Structure for thread argument */
 typedef struct _thread_arg_t {
     int fd;                     /* The fd of serial port */
-    unsigned int loop;          /* loop times */
+    unsigned int loop_times;    /* loop times */
     unsigned char *data_buf;    /* The buffer to keep the chars to send or compare */
     unsigned long *byte_count;  /* Bytes received/sent */
     unsigned int interval;      /* The intervals(miliseconds) between 2 packets */
@@ -38,14 +38,14 @@ typedef struct _baud_item_t {
 
 /* Structure for parameter of serial port */
 typedef struct _port_param_t {
-    char device1[PATH_MAX];  /* The 1st serial port */
-    char device2[PATH_MAX];  /* The 2nd serial port */
-    int baudrate;   /* Baudrate of serial port */
-    int databits;   /* Databits of serial port */
-    int stopbits;   /* Stopbits of serial port */
-    int parity;     /* Parity of serial port */
-    int hwflow;     /* Enable hardware flow control or not */
-    unsigned int loop_count;    /* Loop count for test */
+    char device1[PATH_MAX]; /* The 1st serial port */
+    char device2[PATH_MAX]; /* The 2nd serial port */
+    int baudrate;           /* Baudrate of serial port */
+    int databits;           /* Databits of serial port */
+    int stopbits;           /* Stopbits of serial port */
+    int parity;             /* Parity of serial port */
+    int hwflow;             /* Enable hardware flow control or not */
+    unsigned int loop_times;    /* Loop times for test */
     unsigned int interval;      /* The intervals(miliseconds) between 2 packets */
     unsigned int packet_size;   /* The size of data packet */
     unsigned char data_bitmask; /* Databits mask */

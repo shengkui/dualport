@@ -87,7 +87,7 @@ void print_usage(void)
         "      -c parity        Parity: 0(None), 1(Odd), 2(Even), 3(Mark),\n"
         "                        4(Space) (default: %d)\n"
         "      -s stopbits      Stopbits: 1, 2 (default: %d)\n"
-        "      -l loop_count    Loop count: 1~%u (default: %d)\n"
+        "      -l loop_times    Loop times(packets to send): 1~%u (default: %d)\n"
         "      -i interval      The interval(miliseconds) between 2 packets:\n"
         "                        0~%d (default: %u)\n"
         "      -t packet_size   Size of data packet: 1~%d (default: %d)\n"
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
     CLI_OUT("%s<==>%s (%d %d%c%d) (flow ctrl: %s) (loop %u) (interval %u) (packet size %u)\n",
         param.device1, param.device2, param.baudrate, param.databits,
         parity_name[param.parity], param.stopbits, param.hwflow ? "HW" : "No",
-        param.loop_count, param.interval, param.packet_size);
+        param.loop_times, param.interval, param.packet_size);
 
     /* Open ports */
     int fd1 = open(param.device1, O_RDWR);
@@ -202,28 +202,28 @@ int main(int argc, char *argv[])
 
     arg_read1.fd = fd1;
     arg_read1.data_buf = cmp_buf;
-    arg_read1.loop = param.loop_count;
+    arg_read1.loop_times = param.loop_times;
     arg_read1.byte_count = &total_bytes_read1;
     arg_read1.interval = 0;
     arg_read1.packet_size = param.packet_size;
 
     arg_read2.fd = fd2;
     arg_read2.data_buf = cmp_buf;
-    arg_read2.loop = param.loop_count;
+    arg_read2.loop_times = param.loop_times;
     arg_read2.byte_count = &total_bytes_read2;
     arg_read2.interval = 0;
     arg_read2.packet_size = param.packet_size;
 
     arg_write1.fd = fd1;
     arg_write1.data_buf = obuf;
-    arg_write1.loop = param.loop_count;
+    arg_write1.loop_times = param.loop_times;
     arg_write1.byte_count = &total_bytes_write1;
     arg_write1.interval = param.interval;
     arg_write1.packet_size = param.packet_size;
 
     arg_write2.fd = fd2;
     arg_write2.data_buf = obuf;
-    arg_write2.loop = param.loop_count;
+    arg_write2.loop_times = param.loop_times;
     arg_write2.byte_count = &total_bytes_write2;
     arg_write2.interval = param.interval;
     arg_write2.packet_size = param.packet_size;
@@ -336,7 +336,7 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
     param->stopbits = VAL_STOPBITS;
     param->parity = VAL_PARITY;
     param->hwflow = 0;
-    param->loop_count = VAL_LOOPCOUNT;
+    param->loop_times = VAL_LOOPCOUNT;
     param->interval = VAL_INTERVAL;
     param->packet_size = VAL_PACKETSIZE;
     param->data_bitmask = 0xFF;
@@ -393,13 +393,13 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
 
         case 'l':
             if (!is_all_digit(optarg)) {
-                CLI_OUT("Invalid argument, \"loop_count\" should be an integer\n");
+                CLI_OUT("Invalid argument, \"loop times\" should be an integer\n");
                 return ERR_INVALID_PARAM;
             }
-            param->loop_count = strtoul(optarg, NULL, 0);
-            if (param->loop_count < 1) {
-                CLI_OUT("Invalid argument (loop_count = %d)\n",
-                    param->loop_count);
+            param->loop_times = strtoul(optarg, NULL, 0);
+            if (param->loop_times < 1) {
+                CLI_OUT("Invalid argument (loop times = %d)\n",
+                    param->loop_times);
                 return ERR_INVALID_PARAM;
             }
             break;
@@ -852,7 +852,7 @@ void *routine_read(void *thr_arg)
     unsigned long bytes_read = 0;
     int n;
     int fd = arg->fd;
-    unsigned int loop_count = arg->loop;
+    unsigned int loop_times = arg->loop_times;
     unsigned int pack_size = arg->packet_size;
     unsigned char *ibuf = malloc(pack_size);
     if (ibuf == NULL) {
@@ -861,7 +861,7 @@ void *routine_read(void *thr_arg)
     }
     memset(ibuf, 0, pack_size);
 
-    while (loop_count--) {
+    while (loop_times--) {
         if (g_exit_flag) {
             break;
         }
@@ -930,13 +930,13 @@ void *routine_write(void *thr_arg)
 
     long rc = ERR_OK;
     unsigned long bytes_write = 0;
-    unsigned int loop_count = arg->loop;
+    unsigned int loop_times = arg->loop_times;
     int fd = arg->fd;
     int n;
     unsigned int interval = arg->interval;
     unsigned int pack_size = arg->packet_size;
 
-    while (loop_count--) {
+    while (loop_times--) {
         if (g_exit_flag) {
             break;
         }

@@ -25,7 +25,7 @@ Following are the arguments/options of the program:
         -c parity        Parity: 0(None), 1(Odd), 2(Even), 3(Mark),
                           4(Space) (default: 0)
         -s stopbits      Stopbits: 1, 2 (default: 1)
-        -l loop_count    Loop count: 1~4294967295 (default: 1)
+        -l loop_times    Loop times(packets to send): 1~4294967295 (default: 1)
         -i interval      The interval(miliseconds) between 2 packets:
                           0~2147483647 (default: 10)
         -t packet_size   Size of data packet: 1~4096 (default: 256)
