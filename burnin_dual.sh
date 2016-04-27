@@ -43,7 +43,7 @@ while [ $n -lt $count ] ;do
     let n=n+1
 
     echo "Run test on $sport1 and $sport2 ..."
-    $DUALPORT /dev/$sport1 /dev/$sport2 -b $BAUDRATE -l $LOOP_COUNT >$sport1_$sport2.log 2>&1 &
+    $DUALPORT $sport1 $sport2 -b $BAUDRATE -l $LOOP_COUNT >$sport1_$sport2.log 2>&1 &
     pid=$!
     pids="$pids $pid"
 done

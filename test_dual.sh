@@ -43,7 +43,7 @@ while [ $n -lt $count ] ;do
     let n=n+1
 
     echo "Run test on $sport1 and $sport2 ..."
-    $DUALPORT /dev/$sport1 /dev/$sport2 -b $BAUDRATE -l $LOOP_COUNT
+    $DUALPORT $sport1 $sport2 -b $BAUDRATE -l $LOOP_COUNT
     if [ $? -ne 0 ];then
         result=1
         echo "ERROR on testing $sport1 and $sport2"
