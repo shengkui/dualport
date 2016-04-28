@@ -58,6 +58,7 @@ typedef struct _port_param_t {
 void print_usage(void);
 int check_portname(char *argv[], port_param_t *param);
 int parse_argument(int argc, char *argv[], port_param_t *param);
+int init_data_packet(unsigned char **out_buf, unsigned char **cmp_buf, port_param_t *param);
 int speed_to_flag(int speed);
 int setup_port(int fd, port_param_t *param);
 int reset_port(int fd);
@@ -115,11 +116,13 @@ int is_all_digit(const char *str);
 #define VAL_DATABITS    8
 #define VAL_STOPBITS    1
 #define VAL_PARITY      0
-#define VAL_LOOPCOUNT   1
+#define VAL_LOOPTIMES   1
 #define VAL_INTERVAL    10
 #define VAL_PACKETSIZE  256
 
 #define MAX_PACKETSIZE  4096
+#define MAX_LOOPTIMES   UINT_MAX
+#define MAX_INTERVAL    INT_MAX
 
 /* Error codes */
 #define ERR_OK                  0

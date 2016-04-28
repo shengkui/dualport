@@ -99,7 +99,7 @@ void print_usage(void)
         "  %s /dev/ttyS0 /dev/ttyS1 -l 200\n"
         "\n",
         PROGRAM_VERSION, pname, VAL_BAUDRATE, VAL_DATABITS, VAL_PARITY,
-        VAL_STOPBITS, UINT_MAX, VAL_LOOPCOUNT, INT_MAX, VAL_INTERVAL,
+        VAL_STOPBITS, MAX_LOOPTIMES, VAL_LOOPTIMES, MAX_INTERVAL, VAL_INTERVAL,
         MAX_PACKETSIZE, VAL_PACKETSIZE,
         pname, pname);
 }
@@ -113,6 +113,8 @@ int main(int argc, char *argv[])
     unsigned char *cmp_buf;    /* Buffer to compare with received data */
 
     pname = argv[0];
+
+    memset(&param, 0, sizeof(param));
 
     if (argc < 3) {
         print_usage();
@@ -161,32 +163,11 @@ int main(int argc, char *argv[])
 
     install_sig_handler();
 
-    /* Allocate memory for output buffer */
-    obuf = malloc(param.packet_size);
-    if (obuf == NULL) {
-        CLI_OUT("Allocate buffer error\n");
-        close(fd1);
-        close(fd2);
+    /* Init data packet to send */
+    if (init_data_packet(&obuf, &cmp_buf, &param)) {
+        CLI_OUT("Init data packet error\n");
+        close(fd);
         return ENOMEM;
-    }
-    cmp_buf = malloc(param.packet_size);
-    if (cmp_buf == NULL) {
-        CLI_OUT("Allocate buffer error\n");
-        close(fd1);
-        close(fd2);
-        free(obuf);
-        return ENOMEM;
-    }
-
-    /*
-     * Init output buffer with chars in ASCII-table(ASCII code from 0 to 255)
-     * NOTES: This must be done after setup_port has been called, because the
-     * packet_size and data_bitmask are inited in the function setup_port.
-     */
-    int i;
-    for (i = 0; i < param.packet_size; i++) {
-        obuf[i] = i % 0x100;
-        cmp_buf[i] = obuf[i] & param.data_bitmask;
     }
 
     /* The total bytes sent/received */
@@ -336,10 +317,9 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
     param->stopbits = VAL_STOPBITS;
     param->parity = VAL_PARITY;
     param->hwflow = 0;
-    param->loop_times = VAL_LOOPCOUNT;
+    param->loop_times = VAL_LOOPTIMES;
     param->interval = VAL_INTERVAL;
     param->packet_size = VAL_PACKETSIZE;
-    param->data_bitmask = 0xFF;
 
     while ((opt = getopt(argc, argv, ":b:d:c:s:l:i:t:fh")) != -1) {
         switch (opt) {
@@ -461,6 +441,58 @@ int parse_argument(int argc, char *argv[], port_param_t *param)
         return ERR_INVALID_PARAM;
     }
 
+    return ERR_OK;
+}
+
+
+/******************************************************************************
+ * NAME:
+ *      init_data_packet
+ *
+ * DESCRIPTION: 
+ *      Init data packet to send.
+ *      NOTES: This function must be called after setup_port has been called,
+ *      because the packet_size and data_bitmask are inited in the function
+ *      setup_port.
+ *
+ * PARAMETERS:
+ *      out_buf - Ouput the buffer of data packet
+ *      cmp_buf - Ouput the buffer of data packet for compare
+ *      param   - The parameters of serial port. 
+ *
+ * RETURN:
+ *      0 for OK, others for ERROR
+ ******************************************************************************/
+int init_data_packet(unsigned char **out_buf, unsigned char **cmp_buf, port_param_t *param)
+{
+    if ((!out_buf) || (!cmp_buf) || (!param) || (!param->data_bitmask)) {
+        return ERR_INVALID_PARAM;
+    }
+
+    /* Allocate memory for output buffer */
+    unsigned char *buf1 = malloc(param->packet_size);
+    if (buf1 == NULL) {
+        CLI_OUT("Allocate buffer error\n");
+        return ENOMEM;
+    }
+    unsigned char *buf2 = malloc(param->packet_size);
+    if (buf2 == NULL) {
+        CLI_OUT("Allocate buffer error\n");
+        free(buf1);
+        return ENOMEM;
+    }
+
+    /*
+     * Init output buffer with chars in ASCII-table(ASCII code from 0 to 255)
+     */
+    int i;
+    for (i = 0; i < param->packet_size; i++) {
+        buf1[i] = i % 0x100;
+        buf2[i] = buf1[i] & param->data_bitmask;
+    }
+
+    *out_buf = buf1;
+    *cmp_buf = buf2;
     return ERR_OK;
 }
 
