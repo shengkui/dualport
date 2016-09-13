@@ -166,7 +166,8 @@ int main(int argc, char *argv[])
     /* Init data packet to send */
     if (init_data_packet(&obuf, &cmp_buf, &param)) {
         CLI_OUT("Init data packet error\n");
-        close(fd);
+        close(fd1);
+        close(fd2);
         return ENOMEM;
     }
 
