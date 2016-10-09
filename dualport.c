@@ -28,7 +28,7 @@
 #include "dualport.h"
 
 /* Version of this program */
-#define PROGRAM_VERSION         "0.9"
+#define PROGRAM_VERSION         "1.0"
 
 /* The name of this program */
 static char *pname = "dualport";
