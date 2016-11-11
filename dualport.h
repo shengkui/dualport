@@ -118,7 +118,7 @@ int is_all_digit(const char *str);
 #define VAL_PARITY      0
 #define VAL_LOOPTIMES   1
 #define VAL_INTERVAL    10
-#define VAL_PACKETSIZE  256
+#define VAL_PACKETSIZE  1024
 
 #define MAX_PACKETSIZE  4096
 #define MAX_LOOPTIMES   UINT_MAX
