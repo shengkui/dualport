@@ -28,7 +28,7 @@ Following are the arguments/options of the program:
         -l loop_times    Loop times(packets to send): 1~4294967295 (default: 1)
         -i interval      The interval(miliseconds) between 2 packets:
                           0~2147483647 (default: 10)
-        -t packet_size   Size of data packet: 1~4096 (default: 256)
+        -t packet_size   Size of data packet: 1~4096 (default: 1024)
         -f               Enable hardware flow control (default: no flow ctrl)
         -h               Print this help message
 
